@@ -1,0 +1,36 @@
+# Environments and secrets
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Terraform local state and modules
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+
+# Local databases and Chroma vector store
+chroma_db/
+.chroma/
+
+# Operating system artifacts
+.DS_Store
+Thumbs.db
