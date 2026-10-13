@@ -1,0 +1,33 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "terraform",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "main.tf",
+      "Class": "config",
+      "Misconfigurations": [
+        {
+          "Type": "Terraform Security Check",
+          "ID": "AVD-AWS-0107",
+          "AVDID": "AVD-AWS-0107",
+          "Title": "No placeholder admin SSH exposure",
+          "Description": "Security group rule allows ingress from wildcard CIDR to port 22.",
+          "Message": "Security group 'sg_open_admin' allows unrestricted SSH ingress.",
+          "Resolution": "Remove 0.0.0.0/0 from ingress rules.",
+          "Severity": "HIGH",
+          "PrimaryURL": "https://avd.aquasec.com/misconfig/aws/vpc/avd-aws-0107",
+          "Status": "FAIL",
+          "Layer": {},
+          "CauseMetadata": {
+            "Resource": "aws_security_group.sg_open_admin",
+            "Provider": "AWS",
+            "Service": "vpc",
+            "StartLine": 24,
+            "EndLine": 35
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "check_type": "terraform",
+  "results": {
+    "failed_checks": [
+      {
+        "check_id": "CKV_AWS_24",
+        "bc_check_id": "BC_AWS_NETWORKING_1",
+        "check_name": "Ensure no security groups allow ingress from 0.0.0.0:0 to port 22",
+        "check_result": {
+          "result": "FAILED",
+          "evaluated_keys": [
+            "ingress/[0]/cidr_blocks"
+          ]
+        },
+        "severity": "HIGH",
+        "resource": "aws_security_group.sg_open_admin",
+        "resource_address": "aws_security_group.sg_open_admin",
+        "guideline": "Restrict SSH to trusted CIDR blocks."
+      },
+      {
+        "check_id": "CKV_AWS_8",
+        "check_name": "Ensure all data stored in the Launch configuration EBS is encrypted",
+        "check_result": {
+          "result": "FAILED"
+        },
+        "severity": "MEDIUM",
+        "resource": "aws_instance.ec2_bastion",
+        "resource_address": "aws_instance.ec2_bastion",
+        "guideline": "Enable encryption on root_block_device."
+      }
+    ]
+  },
+  "summary": {
+    "passed": 4,
+    "failed": 2,
+    "skipped": 0,
+    "parsing_errors": 0
+  }
+}
