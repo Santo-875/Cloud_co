@@ -148,3 +148,91 @@ def test_security_scanner_runner_offline() -> None:
     # Should at least contain the open SSH finding from graph rules
     ssh_findings = [f for f in findings if "SSH" in f.id or "SSH" in f.title]
     assert len(ssh_findings) >= 1
+
+
+@pytest.mark.parametrize(
+    "rule_id,checkov_id,resource_id,rule_title,checkov_title,rule_hint,checkov_hint",
+    [
+        (
+            "RULE_OPEN_SSH",
+            "CKV_AWS_24",
+            "sg_open_admin",
+            "Port 22 SSH open to world",
+            "Ensure no security groups allow 0.0.0.0/0 to port 22",
+            "Restrict port 22",
+            "Restrict SSH to trusted CIDRs",
+        ),
+        (
+            "RULE_UNENCRYPTED_EC2_ROOT",
+            "CKV_AWS_8",
+            "ec2_bastion",
+            "EC2 instance 'ec2_bastion' has unencrypted root/attached storage",
+            "Ensure all data stored in the Launch configuration EBS is encrypted",
+            "Set 'ebs_encrypted: true'",
+            "Enable encryption on root_block_device",
+        ),
+        (
+            "RULE_PUBLIC_RDS",
+            "CKV_AWS_17",
+            "rds_db",
+            "RDS instance 'rds_db' is publicly accessible from the internet",
+            "Ensure all data stored in the RDS is not publicly accessible",
+            "Set 'publicly_accessible: false'",
+            "Disable public accessibility",
+        ),
+        (
+            "RULE_UNENCRYPTED_RDS",
+            "CKV_AWS_16",
+            "rds_db",
+            "RDS instance 'rds_db' does not have KMS storage encryption enabled",
+            "Ensure all data stored in the RDS is encrypted",
+            "Set 'storage_encrypted: true'",
+            "Enable storage encryption",
+        ),
+        (
+            "RULE_PUBLIC_S3",
+            "CKV_AWS_20",
+            "s3_data",
+            "S3 bucket 's3_data' is configured with public access enabled",
+            "Ensure S3 bucket is not publicly accessible",
+            "Set 'public: false'",
+            "Enable Block Public Access",
+        ),
+    ],
+)
+def test_dedup_regression_rule_to_check_pairs(
+    rule_id: str,
+    checkov_id: str,
+    resource_id: str,
+    rule_title: str,
+    checkov_title: str,
+    rule_hint: str,
+    checkov_hint: str,
+) -> None:
+    f_rule = Finding(
+        id=rule_id,
+        ids=[rule_id, checkov_id],
+        severity="high",
+        resource=resource_id,
+        title=rule_title,
+        source="graph_rule",
+        sources=["graph_rule"],
+        fix_hint=rule_hint,
+    )
+    f_checkov = Finding(
+        id=checkov_id,
+        ids=[checkov_id],
+        severity="medium",
+        resource=resource_id,
+        title=checkov_title,
+        source="checkov",
+        sources=["checkov"],
+        fix_hint=checkov_hint,
+    )
+    merged = deduplicate_and_merge_findings([f_rule, f_checkov])
+    assert (
+        len(merged) == 1
+    ), f"Expected 1 merged finding for pair {rule_id}/{checkov_id}, got {len(merged)}"
+    assert merged[0].resource == resource_id
+    assert set(merged[0].sources) == {"graph_rule", "checkov"}
+    assert rule_id in merged[0].ids and checkov_id in merged[0].ids

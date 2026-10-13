@@ -85,19 +85,45 @@ def normalize_trivy_finding(item: dict[str, Any]) -> Finding:
 def _categorize_finding(finding: Finding) -> str:
     """Determine thematic security category for deduplication (resource, category)."""
     check_str = f"{finding.id} {finding.title} {' '.join(finding.ids)}".lower()
-    if "ssh" in check_str or "22" in check_str or "admin" in check_str:
+    if (
+        "ckv_aws_24" in check_str
+        or "ssh" in check_str
+        or "22" in check_str
+        or "admin" in check_str
+        or "avd-aws-0107" in check_str
+    ):
         return "ssh_open"
     if "rdp" in check_str or "3389" in check_str:
         return "rdp_open"
-    if "public_s3" in check_str or "s3" in check_str and "public" in check_str:
+    if (
+        "ckv_aws_20" in check_str
+        or "public_s3" in check_str
+        or ("s3" in check_str and "public" in check_str)
+    ):
         return "s3_public"
-    if "public_rds" in check_str or "rds" in check_str and "public" in check_str:
+    if (
+        "ckv_aws_17" in check_str
+        or "public_rds" in check_str
+        or ("rds" in check_str and "public" in check_str)
+    ):
         return "rds_public"
-    if "ebs" in check_str and "encrypt" in check_str:
+    if (
+        "ckv_aws_8" in check_str
+        or "ckv_aws_3" in check_str
+        or "unencrypted_ec2" in check_str
+        or "unencrypted_ebs" in check_str
+        or ("ec2" in check_str and "encrypt" in check_str)
+        or ("ebs" in check_str and "encrypt" in check_str)
+        or ("root" in check_str and "encrypt" in check_str)
+    ):
         return "ebs_encryption"
-    if "rds" in check_str and "encrypt" in check_str:
+    if (
+        "ckv_aws_16" in check_str
+        or "unencrypted_rds" in check_str
+        or ("rds" in check_str and "encrypt" in check_str)
+    ):
         return "rds_encryption"
-    if "versioning" in check_str:
+    if "ckv_aws_21" in check_str or "versioning" in check_str:
         return "s3_versioning"
     if "subnet" in check_str and "igw" in check_str:
         return "public_subnet_routing"
