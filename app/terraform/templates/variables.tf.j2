@@ -1,0 +1,11 @@
+variable "aws_region" {
+  description = "Target AWS Region for deployment"
+  type        = string
+  default     = "{{ region | hcl_string }}"
+}
+
+variable "environment" {
+  description = "Deployment environment name"
+  type        = string
+  default     = "{{ name | hcl_string }}"
+}

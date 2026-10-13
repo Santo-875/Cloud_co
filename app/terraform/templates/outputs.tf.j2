@@ -1,0 +1,25 @@
+# Generated outputs for architecture {{ name | hcl_string }}
+
+{% for node in nodes %}
+{% if node.type == "vpc" %}
+output "{{ node.id }}_id" {
+  description = "ID of VPC {{ node.id }}"
+  value       = aws_vpc.{{ node.id }}.id
+}
+{% elif node.type == "s3" %}
+output "{{ node.id }}_bucket_name" {
+  description = "Name of S3 bucket {{ node.id }}"
+  value       = aws_s3_bucket.{{ node.id }}.id
+}
+{% elif node.type == "ec2" %}
+output "{{ node.id }}_instance_id" {
+  description = "ID of EC2 instance {{ node.id }}"
+  value       = aws_instance.{{ node.id }}.id
+}
+{% elif node.type == "rds" %}
+output "{{ node.id }}_endpoint" {
+  description = "Endpoint of RDS instance {{ node.id }}"
+  value       = aws_db_instance.{{ node.id }}.endpoint
+}
+{% endif %}
+{% endfor %}
