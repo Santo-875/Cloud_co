@@ -84,7 +84,7 @@ jobs:
       - name: Run Checkov on Dockerfile & Workflows
         run: |
           pip install checkov
-          checkov -f Dockerfile --framework dockerfile --compact --quiet || true
+          checkov -f Dockerfile -d .github/workflows --compact --quiet --skip-check CKV_GHA_3
 
   terraform-validate:
     name: Terraform Synthesis & Validation
@@ -141,8 +141,9 @@ jobs:
         uses: aquasecurity/trivy-action@0.28.0
         with:
           image-ref: "cloud-copilot:local"
-          severity: "CRITICAL"
-          exit-code: "0"
+          ignore-unfixed: true
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
 
   deploy:
     name: CD Deployment Gate
