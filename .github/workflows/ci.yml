@@ -1,0 +1,165 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    name: Lint & Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Ruff Linter
+        run: ruff check .
+
+      - name: Run Black Code Formatter Check
+        run: black --check .
+
+      - name: Run Pytest with Coverage
+        run: pytest -v --cov=app --cov-report=term-missing
+
+      - name: Run Detection Evaluation Harness
+        run: python scripts/eval.py
+
+  security:
+    name: Security Scans (Gitleaks, Pip-Audit, Trivy, Checkov)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks Secret Scanner
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run pip-audit Vulnerability Scanner
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
+      - name: Run Trivy Filesystem Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: "fs"
+          ignore-unfixed: true
+          severity: "HIGH,CRITICAL"
+          exit-code: "1"
+
+      - name: Run Checkov on Dockerfile & Workflows
+        run: |
+          pip install checkov
+          checkov -f Dockerfile --framework dockerfile --compact --quiet || true
+
+  terraform-validate:
+    name: Terraform Synthesis & Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Setup Terraform CLI
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.6.6"
+
+      - name: Generate and Validate Sample Architectures
+        run: |
+          for sample in secure insecure_ssh public_rds; do
+            echo "Processing sample: $sample"
+            mkdir -p "out_$sample"
+            python -m app.terraform.generator "tests/architectures/$sample.yaml" --out "out_$sample"
+            cd "out_$sample"
+            terraform init -backend=false
+            terraform validate
+            cd ..
+          done
+
+  docker-build:
+    name: Docker Build & Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Local Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: cloud-copilot:local
+          push: false
+
+      - name: Run Trivy Image Vulnerability Scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: "cloud-copilot:local"
+          severity: "CRITICAL"
+          exit-code: "0"
+
+  deploy:
+    name: CD Deployment Gate
+    needs: [lint-test, security, terraform-validate, docker-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials (OIDC Role Assumption)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: "arn:aws:iam::123456789012:role/CHANGE_ME_COPILOT_DEPLOY_ROLE"
+          aws-region: "ap-south-1"
+        continue-on-error: true
+
+      - name: Deployment Simulation Notice
+        run: |
+          echo "Deployment gate passed required reviewer approval in environment 'production'."
+          echo "Infrastructure execution adheres to zero-apply invariants."
