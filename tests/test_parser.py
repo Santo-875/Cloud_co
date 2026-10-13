@@ -101,6 +101,46 @@ resources:
         parse_architecture(raw)
 
 
+@pytest.mark.parametrize(
+    "bad_region",
+    [
+        "us-east",
+        "us_east_1",
+        "US-EAST-1",
+        "123-us-1",
+        "us-east-1a",
+        "invalid",
+        "us--1",
+    ],
+)
+def test_region_validation_regex_rejections(bad_region: str) -> None:
+    raw = f"""
+name: test_bad_region
+region: {bad_region}
+resources:
+  - id: s3_1
+    type: s3
+"""
+    with pytest.raises(ParserError, match="Invalid AWS region"):
+        parse_architecture(raw)
+
+
+@pytest.mark.parametrize(
+    "good_region",
+    ["us-east-1", "eu-west-1", "ap-south-1", "af-south-1", "sa-east-1", "ca-central-1"],
+)
+def test_region_validation_regex_accepted(good_region: str) -> None:
+    raw = f"""
+name: test_good_region
+region: {good_region}
+resources:
+  - id: s3_1
+    type: s3
+"""
+    arch = parse_architecture(raw)
+    assert arch.region == good_region
+
+
 def test_rejection_unknown_resource_type() -> None:
     raw = """
 name: unknown_type

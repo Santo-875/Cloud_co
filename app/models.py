@@ -227,7 +227,7 @@ class Architecture(BaseModel):
     """Complete verified architecture definition."""
 
     name: str
-    region: str
+    region: str = Field(..., pattern=r"^[a-z]{2}(-[a-z]+)+-\d$")
     nodes: list[Node]
     edges: list[Edge] = Field(default_factory=list)
 

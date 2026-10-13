@@ -1,5 +1,6 @@
 """Parser and validator for untrusted architecture YAML input."""
 
+import re
 from typing import Any
 
 import yaml
@@ -94,6 +95,10 @@ def parse_architecture(raw_input: str | bytes | dict[str, Any]) -> Architecture:
         raise ParserError("Architecture requires a non-empty string 'name'")
     if not isinstance(region, str) or not region.strip():
         raise ParserError("Architecture requires a non-empty string 'region'")
+    if not re.match(r"^[a-z]{2}(-[a-z]+)+-\d$", region.strip()):
+        raise ParserError(
+            f"Invalid AWS region '{region}'. Region must match '^[a-z]{{2}}(-[a-z]+)+-\\d$' (e.g. 'us-east-1', 'eu-west-1')"
+        )
 
     raw_resources = payload.get("resources")
     raw_nodes = payload.get("nodes")

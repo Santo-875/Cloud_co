@@ -150,6 +150,159 @@ def test_security_scanner_runner_offline() -> None:
     assert len(ssh_findings) >= 1
 
 
+def test_runner_run_command_safely_timeout(tmp_path) -> None:
+    """Verify run_command_safely handles command timeout cleanly."""
+    import subprocess
+    from unittest.mock import patch
+
+    with patch(
+        "subprocess.run",
+        side_effect=subprocess.TimeoutExpired(cmd=["test_tool"], timeout=45),
+    ):
+        rc, stdout, stderr = run_command_safely(["test_tool"], cwd=tmp_path)
+        assert rc == 1
+        assert stdout == ""
+        assert "timed out" in stderr.lower()
+
+
+def test_runner_run_command_safely_nonzero_exit(tmp_path) -> None:
+    """Verify run_command_safely returns exit code and captured streams on nonzero exit."""
+    from subprocess import CompletedProcess
+    from unittest.mock import patch
+
+    with patch(
+        "subprocess.run",
+        return_value=CompletedProcess(
+            args=["fake_cmd"],
+            returncode=2,
+            stdout="sample output",
+            stderr="fatal error occurred",
+        ),
+    ):
+        rc, stdout, stderr = run_command_safely(["fake_cmd"], cwd=tmp_path)
+        assert rc == 2
+        assert stdout == "sample output"
+        assert stderr == "fatal error occurred"
+
+
+def test_runner_tools_execution_with_findings(tmp_path) -> None:
+    """Mock external tools (terraform, checkov, trivy) returning diagnostics/findings."""
+    from subprocess import CompletedProcess
+    from unittest.mock import patch
+
+    arch = Architecture(
+        name="multi_tool_test",
+        region="us-east-1",
+        nodes=[Node(id="vpc_1", type="vpc", props={"cidr": "10.0.0.0/16"})],
+    )
+
+    tf_diag_json = json.dumps(
+        {
+            "diagnostics": [
+                {
+                    "severity": "error",
+                    "summary": "Missing required argument",
+                    "detail": "Argument 'name' is required.",
+                    "address": "aws_vpc.vpc_1",
+                }
+            ]
+        }
+    )
+    checkov_json = json.dumps(
+        {
+            "results": {
+                "failed_checks": [
+                    {
+                        "check_id": "CKV_AWS_260",
+                        "check_name": "Default security group open",
+                        "severity": "HIGH",
+                        "resource": "aws_vpc.vpc_1",
+                        "guideline": "Restrict default security group",
+                    }
+                ]
+            }
+        }
+    )
+    trivy_json = json.dumps(
+        {
+            "Results": [
+                {
+                    "Target": "aws_vpc.vpc_1",
+                    "Misconfigurations": [
+                        {
+                            "ID": "AVD-AWS-0999",
+                            "Title": "VPC Flow Logs Disabled",
+                            "Severity": "MEDIUM",
+                            "Resolution": "Enable VPC flow logs",
+                            "CauseMetadata": {"Resource": "aws_vpc.vpc_1"},
+                        }
+                    ],
+                }
+            ]
+        }
+    )
+
+    def mock_subprocess_run(args, *p_args, **kwargs):
+        cmd = args[0]
+        if "terraform" in cmd:
+            if "validate" in args:
+                return CompletedProcess(
+                    args=args, returncode=1, stdout=tf_diag_json, stderr=""
+                )
+            return CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+        if "checkov" in cmd:
+            return CompletedProcess(
+                args=args, returncode=1, stdout=checkov_json, stderr=""
+            )
+        if "trivy" in cmd:
+            return CompletedProcess(
+                args=args, returncode=1, stdout=trivy_json, stderr=""
+            )
+        return CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+    with (
+        patch(
+            "shutil.which",
+            side_effect=lambda tool: f"/mock/bin/{tool}",
+        ),
+        patch("subprocess.run", side_effect=mock_subprocess_run),
+    ):
+        runner = SecurityScannerRunner(arch)
+        findings, scanners = runner.run_scans()
+
+        assert "terraform_validate" in scanners
+        assert "checkov" in scanners
+        assert "trivy" in scanners
+        finding_ids = {f.id for f in findings}
+        assert "TF_VALIDATE_ERROR" in finding_ids
+        assert "CKV_AWS_260" in finding_ids
+        assert "AVD-AWS-0999" in finding_ids
+
+
+def test_runner_handles_timeout_during_scans() -> None:
+    """Verify scanner runner degrades gracefully when an external tool times out."""
+    import subprocess
+    from unittest.mock import patch
+
+    arch = Architecture(
+        name="timeout_arch",
+        region="us-east-1",
+        nodes=[Node(id="vpc_1", type="vpc", props={"cidr": "10.0.0.0/16"})],
+    )
+
+    with (
+        patch("shutil.which", return_value="/mock/bin/terraform"),
+        patch(
+            "subprocess.run",
+            side_effect=subprocess.TimeoutExpired(cmd=["terraform"], timeout=45),
+        ),
+    ):
+        runner = SecurityScannerRunner(arch)
+        findings, scanners = runner.run_scans()
+        assert "terraform_validate" in scanners
+        assert isinstance(findings, list)
+
+
 @pytest.mark.parametrize(
     "rule_id,checkov_id,resource_id,rule_title,checkov_title,rule_hint,checkov_hint",
     [
