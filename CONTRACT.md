@@ -24,13 +24,15 @@ ResourceType = Literal[
     "sns",
     "iam_role",
     "rds",
+    "internet_gateway",
+    "route_table",
 ]
 
 
 class Node(BaseModel):
-    id: str
+    id: str  # Must match ^[a-z][a-z0-9_]{0,40}$
     type: ResourceType
-    props: dict = Field(default_factory=dict)
+    props: dict = Field(default_factory=dict)  # Validated against per-type prop schemas
     parent: str | None = None  # containment: e.g. subnet in vpc
     uses: list[str] = Field(default_factory=list)  # attachment: e.g. ec2 uses security group
 
@@ -50,11 +52,15 @@ class Architecture(BaseModel):
 
 
 class Finding(BaseModel):
-    id: str  # e.g. CKV_AWS_24 or RULE_SSH_OPEN
+    id: str  # Canonical or primary check id for display (e.g. CKV_AWS_24 or RULE_SSH_OPEN)
+    ids: list[str] = Field(default_factory=list)  # All merged check ids across sources
     severity: Literal["low", "medium", "high", "critical"]
     resource: str  # node id
     title: str
-    source: Literal["checkov", "trivy", "validate", "graph_rule"]
+    source: Literal["checkov", "trivy", "validate", "graph_rule"]  # Primary detection source
+    sources: list[Literal["checkov", "trivy", "validate", "graph_rule"]] = Field(
+        default_factory=list
+    )  # Preserved list of all detection sources
     fix_hint: str | None = None
 ```
 
@@ -117,7 +123,9 @@ The parser (`app/parser.py`) must raise a structured `ParserError` on:
 - Input size exceeding **100 KB** (102,400 bytes).
 - Node count exceeding **200** nodes.
 - Duplicate resource `id`.
+- Resource `id` not matching regex `^[a-z][a-z0-9_]{0,40}$`.
 - Unknown `type` (not in `ResourceType`).
+- Invalid resource properties (unknown keys rejected via `extra='forbid'`, invalid CIDRs, ports out of 0-65535, invalid instance types or types).
 - Dangling references:
   - `parent` refers to non-existent node ID.
   - `uses` contains non-existent node ID.
@@ -133,7 +141,7 @@ The parser (`app/parser.py`) must raise a structured `ParserError` on:
 ### 3.1 Severity Levels
 - `critical`: Extreme risk (e.g., exposed admin interfaces, unrestricted data leakage).
 - `high`: Major security violations (e.g., open SSH/RDP to world, public S3 bucket, public RDS).
-- `medium`: Insecure defaults (e.g., unencrypted EBS volumes or unencrypted RDS storage).
+- `medium`: Insecure defaults (e.g., unencrypted EBS volumes or unencrypted RDS storage, public subnet without internet gateway route).
 - `low`: Best practice omissions (e.g., S3 versioning disabled).
 
 ### 3.2 Finding Sources
@@ -147,7 +155,8 @@ When both graph rules and external scanners report findings for the same `(resou
 - Merge into a single `Finding`.
 - Set severity to the highest severity among all matching findings.
 - Retain the most specific title and fix hint.
-- Preserve list of all detection sources.
+- Preserve list of all detection sources in `sources` and all check identifiers in `ids`.
+- Maintain canonical display `id` and primary `source`.
 
 ---
 
@@ -164,7 +173,8 @@ When both graph rules and external scanners report findings for the same `(resou
 | `GET` | `/architecture/{id}/cost` | Calculate estimated monthly cost | None | `200 { "line_items": [...], "total_monthly_usd": float, "assumptions": dict, "disclaimer": str, "last_updated": str }` |
 | `POST` | `/chat` | Grounded explainer Q&A | `{ "architecture_id": str, "message": str, "mode": "explain_architecture" \| "explain_findings" \| "answer_question" }` | `200 { "response": str, "sources": list[str] }` |
 
-Rate limit on `/chat`: 10 requests per minute per client IP.
+Rate limit on `/chat`: 10 requests per minute per client IP (derived directly from `request.client.host`; `X-Forwarded-For` is ignored unless `TRUSTED_PROXY_HEADERS=true` is explicitly configured).
+In-memory architecture store assigns random UUIDs (`uuid.uuid4()`), enforces an LRU capacity of 100 entries, and a 1-hour TTL.
 
 ---
 
@@ -257,3 +267,4 @@ cloud-copilot/
 2. **Subprocess Isolation**: External tool execution (`terraform`, `checkov`, `trivy`) must exclusively pass argument lists into `subprocess.run(args, ...)` with timeouts and isolated temporary working directories. `shell=True` is strictly prohibited.
 3. **No Hardcoded Secrets**: Zero secrets stored in git or files. API keys must only be read from environment variables (`GEMINI_API_KEY`).
 4. **Offline Resilience**: All tests must execute offline with 100% pass rate using `MockLLMClient` and sample scanner fixtures. Missing CLI tools must degrade gracefully.
+5. **Demo-Grade Architecture**: Cloud Copilot is designed as a single-user, demo-grade DevSecOps tool. Long-term state persistence and multi-tenant isolation are explicitly decoupled into advancement stages.
