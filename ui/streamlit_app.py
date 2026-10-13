@@ -1,10 +1,11 @@
 import json
+import os
 from pathlib import Path
 
 import httpx
 import streamlit as st
 
-API_BASE_URL = "http://127.0.0.1:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(
     page_title="Cloud Copilot | DevSecOps & Architecture",
@@ -53,7 +54,7 @@ with st.sidebar:
         placeholder="name: my-app\nregion: us-east-1\nresources:\n  - id: vpc_1\n    type: vpc\n...",
     )
 
-    if st.button("Parse & Deploy to Copilot", type="primary"):
+    if st.button("Parse & Load Architecture", type="primary"):
         if not arch_input.strip():
             st.error("Please enter or select architecture YAML.")
         else:
@@ -93,7 +94,7 @@ tab_topology, tab_findings, tab_terraform, tab_cost, tab_chat = st.tabs(
 
 if not active_id:
     st.info(
-        "👈 Please enter YAML or select a sample in the sidebar and click **'Parse & Deploy to Copilot'**."
+        "👈 Please enter YAML or select a sample in the sidebar and click **'Parse & Load Architecture'**."
     )
 else:
     # Tab 1: Topology
