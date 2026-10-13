@@ -1,0 +1,6 @@
+{
+  "finding_ids": [
+    "RULE_OPEN_SSH",
+    "RULE_UNENCRYPTED_EC2_ROOT"
+  ]
+}

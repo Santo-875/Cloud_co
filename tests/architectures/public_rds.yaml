@@ -1,0 +1,23 @@
+name: public-rds-sample
+region: eu-west-1
+resources:
+  - id: vpc_prod
+    type: vpc
+    props:
+      cidr: 10.1.0.0/16
+  - id: sub_db
+    type: subnet
+    in: vpc_prod
+    props:
+      cidr: 10.1.2.0/24
+      public: false
+  - id: rds_database
+    type: rds
+    in: sub_db
+    props:
+      engine: postgres
+      instance_class: db.t3.micro
+      allocated_storage: 20
+      publicly_accessible: true
+      storage_encrypted: false
+connections: []

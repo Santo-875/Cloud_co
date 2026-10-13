@@ -1,0 +1,6 @@
+{
+  "finding_ids": [
+    "RULE_PUBLIC_RDS",
+    "RULE_UNENCRYPTED_RDS"
+  ]
+}

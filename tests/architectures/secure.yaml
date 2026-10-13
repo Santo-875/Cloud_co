@@ -1,0 +1,45 @@
+name: secure-sample-infra
+region: ap-south-1
+resources:
+  - id: vpc_main
+    type: vpc
+    props:
+      cidr: 10.0.0.0/16
+  - id: sub_private
+    type: subnet
+    in: vpc_main
+    props:
+      cidr: 10.0.1.0/24
+      public: false
+  - id: sg_internal
+    type: security_group
+    in: vpc_main
+    props:
+      description: Internal microservice communication
+      ingress:
+        - port: 443
+          cidr: 10.0.0.0/16
+          protocol: tcp
+      egress:
+        - port: 0
+          cidr: 0.0.0.0/0
+          protocol: -1
+  - id: ec2_worker
+    type: ec2
+    in: sub_private
+    uses:
+      - sg_internal
+    props:
+      instance_type: t3.micro
+      ebs_encrypted: true
+  - id: s3_secure_data
+    type: s3
+    props:
+      versioning: true
+      public: false
+      encryption: true
+connections:
+  - from: ec2_worker
+    to: s3_secure_data
+    kind: data
+    label: read_write

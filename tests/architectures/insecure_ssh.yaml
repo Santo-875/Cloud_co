@@ -1,0 +1,30 @@
+name: insecure-ssh-sample
+region: us-east-1
+resources:
+  - id: vpc_dev
+    type: vpc
+    props:
+      cidr: 10.0.0.0/16
+  - id: sub_dev
+    type: subnet
+    in: vpc_dev
+    props:
+      cidr: 10.0.1.0/24
+      public: true
+  - id: sg_open_admin
+    type: security_group
+    in: vpc_dev
+    props:
+      ingress:
+        - port: 22
+          cidr: 0.0.0.0/0
+          protocol: tcp
+  - id: ec2_bastion
+    type: ec2
+    in: sub_dev
+    uses:
+      - sg_open_admin
+    props:
+      instance_type: t3.micro
+      ebs_encrypted: false
+connections: []
