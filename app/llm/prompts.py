@@ -113,3 +113,35 @@ def build_explain_fix_prompt(
         "Explain the applied deterministic security fix patch, highlighting which findings "
         "were resolved and why the modified attributes mitigate the identified risk."
     )
+
+
+def build_explain_diagnose_prompt(
+    architecture: Architecture,
+    source: str,
+    target: str,
+    blockers: list,
+    graph_evidence: dict,
+    question: str,
+) -> str:
+    blockers_xml = []
+    for b in blockers:
+        blockers_xml.append(
+            f'  <blocker rank="{b.rank}" category="{b.category}">\n'
+            f"    <summary>{b.summary}</summary>\n"
+            f"    <evidence>{b.evidence}</evidence>\n"
+            f"  </blocker>"
+        )
+    blockers_block = (
+        "<diagnostic_blockers>\n" + "\n".join(blockers_xml) + "\n</diagnostic_blockers>"
+        if blockers_xml
+        else "<diagnostic_blockers>None: Resources are directly reachable</diagnostic_blockers>"
+    )
+
+    return (
+        f"{format_architecture_xml(architecture)}\n\n"
+        f"<graph_evidence>\n{graph_evidence}\n</graph_evidence>\n\n"
+        f"{blockers_block}\n\n"
+        f"<troubleshooting_question>\n{question}\n</troubleshooting_question>\n\n"
+        f"Explain the reachability status between '{source}' and '{target}' based strictly on the "
+        "ranked diagnostic blockers and graph evidence above."
+    )

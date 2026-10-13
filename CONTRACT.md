@@ -75,6 +75,29 @@ class ArchitecturePatch(BaseModel):
     patch_id: str
     architecture_id: str
     operations: list[PatchOperation]
+
+
+class DiagnosticBlocker(BaseModel):
+    rank: int
+    category: Literal[
+        "security_group_ingress",
+        "security_group_egress",
+        "subnet_routing",
+        "vpc_boundary",
+        "missing_connection",
+        "unknown_resource",
+    ]
+    summary: str
+    evidence: dict = Field(default_factory=dict)
+
+
+class DiagnoseResponse(BaseModel):
+    reachable: bool
+    source: str
+    target: str
+    blockers: list[DiagnosticBlocker]
+    graph_evidence: dict
+    explanation: str
 ```
 
 ---
@@ -187,6 +210,7 @@ When both graph rules and external scanners report findings for the same `(resou
 | `POST` | `/chat` | Grounded explainer Q&A | `{ "architecture_id": str, "message": str, "mode": "explain_architecture" \| "explain_findings" \| "answer_question" }` | `200 { "response": str, "sources": list[str] }` |
 | `POST` | `/architecture/{id}/fix` | Deterministic fix patch generation, diff, re-scan before/after counts, and LLM explanation | Optional `{ "finding_ids": list[str] }` | `200 { "patch_id": str, "patch": ArchitecturePatch, "diff": str, "before_count": int, "after_count": int, "fixed_findings": list[str], "explanation": str }` |
 | `POST` | `/architecture/{id}/apply_patch` | Apply a generated patch to update the stored architecture | `{ "patch_id": str }` | `200 { "id": str, "name": str, "nodes_count": int, "edges_count": int, "message": str }` |
+| `POST` | `/architecture/{id}/diagnose` | Deterministic network reachability diagnosis and ranked blocker analysis with LLM explanation | `{ "question": str, "source": str \| None, "target": str \| None, "port": int \| None }` | `200 DiagnoseResponse` |
 
 Rate limit on `/chat`: 10 requests per minute per client IP (derived directly from `request.client.host`; `X-Forwarded-For` is ignored unless `TRUSTED_PROXY_HEADERS=true` is explicitly configured).
 In-memory architecture store assigns random UUIDs (`uuid.uuid4()`), enforces an LRU capacity of 100 entries, and a 1-hour TTL.

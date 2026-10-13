@@ -77,3 +77,20 @@ class ArchitectureExplainer:
 
         prompt = build_explain_fix_prompt(architecture, diff, fixed_findings)
         return self.llm.complete(prompt, system_prompt=TRUSTED_SYSTEM_INSTRUCTION)
+
+    def explain_diagnosis(
+        self,
+        architecture: Architecture,
+        source: str,
+        target: str,
+        blockers: list,
+        graph_evidence: dict,
+        question: str,
+    ) -> str:
+        """Generate grounded explanation of network reachability blockers."""
+        from app.llm.prompts import build_explain_diagnose_prompt
+
+        prompt = build_explain_diagnose_prompt(
+            architecture, source, target, blockers, graph_evidence, question
+        )
+        return self.llm.complete(prompt, system_prompt=TRUSTED_SYSTEM_INSTRUCTION)

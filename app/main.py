@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.cost.estimator import CostEstimator
+from app.diagnose import diagnose_reachability
 from app.fix import (
     apply_patch_to_architecture,
     generate_architecture_diff,
@@ -19,7 +20,7 @@ from app.fix import (
 from app.graph import ArchitectureGraph
 from app.llm.client import GeminiClient, LLMClient, MockLLMClient
 from app.llm.explainer import ArchitectureExplainer
-from app.models import Architecture, ArchitecturePatch, Finding
+from app.models import Architecture, ArchitecturePatch, DiagnoseResponse, Finding
 from app.parser import ParserError, parse_architecture
 from app.security.runner import SecurityScannerRunner
 from app.store import GLOBAL_PATCH_STORE, GLOBAL_STORE
@@ -366,3 +367,42 @@ def apply_patch(arch_id: str, req: ApplyPatchRequest) -> ApplyPatchResponse:
         edges_count=len(patched_arch.edges),
         message=f"Successfully applied patch {req.patch_id} with {len(patch.operations)} operations.",
     )
+
+
+class DiagnoseRequest(BaseModel):
+    question: str
+    source: str | None = None
+    target: str | None = None
+    port: int | None = None
+
+
+@app.post("/architecture/{arch_id}/diagnose", response_model=DiagnoseResponse)
+def diagnose_architecture(arch_id: str, req: DiagnoseRequest) -> DiagnoseResponse:
+    """Perform deterministic reachability analysis over subnets, security groups, and routes with LLM explanation."""
+    arch = GLOBAL_STORE.get(arch_id)
+    if not arch:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Architecture '{arch_id}' not found.",
+        )
+
+    diag_resp = diagnose_reachability(
+        arch=arch,
+        question=req.question,
+        source_id=req.source,
+        target_id=req.target,
+        port=req.port,
+    )
+
+    llm = get_llm_client()
+    explainer = ArchitectureExplainer(llm_client=llm)
+    diag_resp.explanation = explainer.explain_diagnosis(
+        architecture=arch,
+        source=diag_resp.source,
+        target=diag_resp.target,
+        blockers=diag_resp.blockers,
+        graph_evidence=diag_resp.graph_evidence,
+        question=req.question,
+    )
+
+    return diag_resp

@@ -35,6 +35,24 @@ Cloud Copilot features a deterministic remediation loop that eliminates hallucin
 2. **Explicit Patch Application (`POST /architecture/{id}/apply_patch`)**:
    - Requires `{ "patch_id": "<id>" }` to commit the patch to the stored architecture.
 
+---
+
+## 🔍 Troubleshooting & Reachability Analysis (Stage 1b)
+
+Diagnose network connectivity issues deterministically:
+
+1. **Deterministic Reachability Analysis (`POST /architecture/{id}/diagnose`)**:
+   - Accepts a question or source/destination node identifiers (e.g., `{"query": "Why can't my EC2 web-server reach the RDS database?"}` or `{"source_id": "web-server", "target_id": "app-db"}`).
+   - Walks the network graph through containment hierarchies (subnets, VPCs), security groups, route tables, and Internet Gateways.
+   - Identifies blockers deterministically:
+     - Cross-VPC boundary missing VPC peering or transit gateway.
+     - Destination security group lacks ingress rule for source SG / CIDR and destination port.
+     - Missing route table routes or missing Internet Gateway for internet-bound traffic.
+     - Cross-subnet routing without valid router/gateway paths.
+   - Produces a deterministic boolean `reachable`, detailed blocker list with suggested fixes, and a grounded LLM explanation.
+
+---
+
 ## 🚀 Quickstart
 
 ### 1. Local Setup

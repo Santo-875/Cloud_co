@@ -262,3 +262,30 @@ class ArchitecturePatch(BaseModel):
     patch_id: str
     architecture_id: str
     operations: list[PatchOperation] = Field(default_factory=list)
+
+
+class DiagnosticBlocker(BaseModel):
+    """A ranked blocker preventing reachability between two components."""
+
+    rank: int
+    category: Literal[
+        "security_group_ingress",
+        "security_group_egress",
+        "subnet_routing",
+        "vpc_boundary",
+        "missing_connection",
+        "unknown_resource",
+    ]
+    summary: str
+    evidence: dict[str, Any] = Field(default_factory=dict)
+
+
+class DiagnoseResponse(BaseModel):
+    """Deterministic reachability diagnosis and ranked blockers."""
+
+    reachable: bool
+    source: str
+    target: str
+    blockers: list[DiagnosticBlocker] = Field(default_factory=list)
+    graph_evidence: dict[str, Any] = Field(default_factory=dict)
+    explanation: str
