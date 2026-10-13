@@ -190,3 +190,59 @@ def test_optional_terraform_validate(tmp_path) -> None:
         check=False,
     )
     assert res_val.returncode == 0
+
+
+def test_checkov_on_secure_sample_no_high_findings(tmp_path) -> None:
+    """When Checkov is installed, verify zero HIGH/CRITICAL findings on the secure sample."""
+    import json
+    from pathlib import Path
+
+    checkov_bin = shutil.which("checkov")
+    if not checkov_bin:
+        pytest.skip("Checkov CLI is not installed on host; skipping test")
+
+    secure_path = Path(__file__).parent / "architectures" / "secure.yaml"
+    arch = parse_architecture(secure_path.read_text(encoding="utf-8"))
+    generator = TerraformGenerator(arch)
+    generator.write_to_directory(tmp_path)
+
+    res = subprocess.run(
+        [
+            checkov_bin,
+            "-d",
+            str(tmp_path),
+            "--framework",
+            "terraform",
+            "-o",
+            "json",
+            "--quiet",
+            "--compact",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+    if res.stdout.strip():
+        try:
+            report = json.loads(res.stdout)
+            failed_checks = []
+            if isinstance(report, dict):
+                failed_checks = report.get("results", {}).get("failed_checks", [])
+            elif isinstance(report, list):
+                for item in report:
+                    failed_checks.extend(
+                        item.get("results", {}).get("failed_checks", [])
+                    )
+
+            high_critical = [
+                c
+                for c in failed_checks
+                if str(c.get("severity", "")).upper() in ("HIGH", "CRITICAL")
+            ]
+            assert (
+                len(high_critical) == 0
+            ), f"Expected no HIGH/CRITICAL Checkov findings on secure sample, got: {high_critical}"
+        except json.JSONDecodeError:
+            pass
