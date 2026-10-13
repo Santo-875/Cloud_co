@@ -11,13 +11,18 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.cost.estimator import CostEstimator
+from app.fix import (
+    apply_patch_to_architecture,
+    generate_architecture_diff,
+    generate_patch,
+)
 from app.graph import ArchitectureGraph
 from app.llm.client import GeminiClient, LLMClient, MockLLMClient
 from app.llm.explainer import ArchitectureExplainer
-from app.models import Architecture, Finding
+from app.models import Architecture, ArchitecturePatch, Finding
 from app.parser import ParserError, parse_architecture
 from app.security.runner import SecurityScannerRunner
-from app.store import GLOBAL_STORE
+from app.store import GLOBAL_PATCH_STORE, GLOBAL_STORE
 from app.terraform.generator import TerraformGenerator
 
 app = FastAPI(
@@ -251,3 +256,113 @@ def chat_explainer(req: ChatRequest, request: Request) -> ChatResponse:
         text, sources = explainer.answer_question(arch, findings, req.message)
 
     return ChatResponse(response=text, sources=sources)
+
+
+class FixRequest(BaseModel):
+    finding_ids: list[str] | None = None
+
+
+class FixResponse(BaseModel):
+    patch_id: str
+    patch: ArchitecturePatch
+    diff: str
+    before_count: int
+    after_count: int
+    fixed_findings: list[str]
+    explanation: str
+
+
+class ApplyPatchRequest(BaseModel):
+    patch_id: str
+
+
+class ApplyPatchResponse(BaseModel):
+    id: str
+    name: str
+    nodes_count: int
+    edges_count: int
+    message: str
+
+
+@app.post("/architecture/{arch_id}/fix", response_model=FixResponse)
+def fix_architecture(arch_id: str, req: FixRequest | None = None) -> FixResponse:
+    """Generate deterministic fix patch, diff, re-scan counts, and LLM explanation.
+
+    Does NOT modify the stored architecture.
+    """
+    arch = GLOBAL_STORE.get(arch_id)
+    if not arch:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Architecture '{arch_id}' not found.",
+        )
+
+    runner = SecurityScannerRunner(arch)
+    findings, _ = runner.run_scans()
+    before_count = len(findings)
+
+    filter_ids = req.finding_ids if req else None
+    patch, fixed_findings = generate_patch(
+        arch, findings, filter_finding_ids=filter_ids
+    )
+    patched_arch = apply_patch_to_architecture(arch, patch)
+
+    # Re-scan patched architecture
+    patched_runner = SecurityScannerRunner(patched_arch)
+    after_findings, _ = patched_runner.run_scans()
+    after_count = len(after_findings)
+
+    # Human-readable YAML diff
+    diff = generate_architecture_diff(arch, patched_arch)
+
+    # LLM Explanation
+    llm = get_llm_client()
+    explainer = ArchitectureExplainer(llm_client=llm)
+    explanation = explainer.explain_fix(patched_arch, diff, fixed_findings)
+
+    # Save patch for optional subsequent apply
+    GLOBAL_PATCH_STORE.save(patch)
+
+    return FixResponse(
+        patch_id=patch.patch_id,
+        patch=patch,
+        diff=diff,
+        before_count=before_count,
+        after_count=after_count,
+        fixed_findings=fixed_findings,
+        explanation=explanation,
+    )
+
+
+@app.post("/architecture/{arch_id}/apply_patch", response_model=ApplyPatchResponse)
+def apply_patch(arch_id: str, req: ApplyPatchRequest) -> ApplyPatchResponse:
+    """Apply a previously generated patch to the stored architecture."""
+    arch = GLOBAL_STORE.get(arch_id)
+    if not arch:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Architecture '{arch_id}' not found.",
+        )
+
+    patch = GLOBAL_PATCH_STORE.get(req.patch_id)
+    if not patch:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Patch '{req.patch_id}' not found or expired.",
+        )
+
+    patched_arch = apply_patch_to_architecture(arch, patch)
+    updated = GLOBAL_STORE.update(arch_id, patched_arch)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update stored architecture.",
+        )
+
+    return ApplyPatchResponse(
+        id=arch_id,
+        name=patched_arch.name,
+        nodes_count=len(patched_arch.nodes),
+        edges_count=len(patched_arch.edges),
+        message=f"Successfully applied patch {req.patch_id} with {len(patch.operations)} operations.",
+    )

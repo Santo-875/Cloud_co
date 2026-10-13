@@ -245,3 +245,20 @@ class Finding(BaseModel):
         default_factory=list
     )
     fix_hint: str | None = None
+
+
+class PatchOperation(BaseModel):
+    """A granular patch operation modifying an architecture node."""
+
+    op: Literal["add_node", "remove_node", "change_props"]
+    target_node_id: str
+    node: Node | None = None
+    props_patch: dict[str, Any] = Field(default_factory=dict)
+
+
+class ArchitecturePatch(BaseModel):
+    """Set of patch operations to remediate findings."""
+
+    patch_id: str
+    architecture_id: str
+    operations: list[PatchOperation] = Field(default_factory=list)

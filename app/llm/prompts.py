@@ -98,3 +98,18 @@ def build_qa_prompt(
         f"<user_question>\n{user_question}\n</user_question>\n\n"
         "Answer the user's question accurately using only the facts inside the data blocks above."
     )
+
+
+def build_explain_fix_prompt(
+    architecture: Architecture,
+    diff: str,
+    fixed_findings: list[str],
+) -> str:
+    findings_str = ", ".join(fixed_findings) if fixed_findings else "None"
+    return (
+        f"{format_architecture_xml(architecture)}\n\n"
+        f"<remediation_diff>\n{diff}\n</remediation_diff>\n\n"
+        f"<fixed_findings>\n{findings_str}\n</fixed_findings>\n\n"
+        "Explain the applied deterministic security fix patch, highlighting which findings "
+        "were resolved and why the modified attributes mitigate the identified risk."
+    )

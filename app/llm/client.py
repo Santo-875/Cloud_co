@@ -31,6 +31,8 @@ class MockLLMClient:
             if k.lower() in prompt.lower():
                 return v
 
+        if "remediation_diff" in prompt.lower() or "fixed_findings" in prompt.lower():
+            return "Remediation patch successfully applied: resolves identified security findings by restricting open ingress rules and enabling storage encryption across target nodes."
         if "explain_architecture" in prompt.lower() or "architecture" in prompt.lower():
             return "This cloud architecture contains standard VPC networking, compute, and data persistence layers."
         if "finding" in prompt.lower() or "security" in prompt.lower():

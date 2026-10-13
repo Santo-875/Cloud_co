@@ -19,8 +19,21 @@
 - **Cost Estimation**: Itemized monthly infrastructure pricing calculations with assumptions and disclaimers.
 - **Grounded Explainer (RAG + LLM)**: Delimited XML prompt boundaries separate trusted instructions from untrusted data, preventing prompt injection overrides.
 - **FastAPI Backend & Streamlit Dashboard**: Single-pane dashboard featuring topology views, severity badges, Terraform viewer, and chat.
+- **Deterministic Fix Loop**: Generate non-destructive patches, unified diffs, and re-scan metrics, with explicit patch application.
 
 ---
+
+## 🔧 Deterministic Fix Loop (Stage 1a)
+
+Cloud Copilot features a deterministic remediation loop that eliminates hallucinatory IaC edits:
+
+1. **Deterministic Fix Generation (`POST /architecture/{id}/fix`)**:
+   - Generates structured, immutable patches (`change_props`, `add_node`, `remove_node`) resolving fixable security violations (restricting open SSH/RDP ingress CIDRs, enabling EC2 root/EBS KMS encryption, making RDS/S3 private, enabling bucket versioning).
+   - Generates a human-readable unified YAML diff comparing original and patched states.
+   - Calculates re-scan before/after finding counts. The stored architecture is **strictly unmodified** during this step.
+   - LLM provides a grounded explanation of the changes based strictly on the generated diff.
+2. **Explicit Patch Application (`POST /architecture/{id}/apply_patch`)**:
+   - Requires `{ "patch_id": "<id>" }` to commit the patch to the stored architecture.
 
 ## 🚀 Quickstart
 

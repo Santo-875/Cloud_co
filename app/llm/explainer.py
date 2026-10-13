@@ -65,3 +65,15 @@ class ArchitectureExplainer:
         prompt = build_qa_prompt(architecture, findings, rag_chunks, question)
         response = self.llm.complete(prompt, system_prompt=TRUSTED_SYSTEM_INSTRUCTION)
         return response, sorted(set(sources))
+
+    def explain_fix(
+        self,
+        architecture: Architecture,
+        diff: str,
+        fixed_findings: list[str],
+    ) -> str:
+        """Generate grounded explanation of applied deterministic remediation."""
+        from app.llm.prompts import build_explain_fix_prompt
+
+        prompt = build_explain_fix_prompt(architecture, diff, fixed_findings)
+        return self.llm.complete(prompt, system_prompt=TRUSTED_SYSTEM_INSTRUCTION)
