@@ -211,7 +211,9 @@ def parse_architecture(raw_input: str | bytes | dict[str, Any]) -> Architecture:
             )
         except ValidationError as err:
             err_msgs = [f"{e['loc']}: {e['msg']}" for e in err.errors()]
-            raise ParserError("Validation failed for connection", details=err_msgs)
+            raise ParserError(
+                "Validation failed for connection", details=err_msgs
+            ) from err
 
         edges.append(edge)
 
