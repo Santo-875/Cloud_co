@@ -91,4 +91,4 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) enforces:
 2. `security`: Gitleaks secret detection, pip-audit dependencies, Trivy filesystem scan, and Checkov.
 3. `terraform-validate`: Generates HCL for test topologies and runs `terraform init -backend=false` and `terraform validate`.
 4. `docker-build`: Multi-stage build verification and Trivy vulnerability scan.
-5. `deploy`: Production environment approval gate with AWS OIDC role assumption (`CHANGE_ME_COPILOT_DEPLOY_ROLE`).
+5. `deploy`: Production environment approval gate with AWS OIDC role assumption (`CHANGE_ME_COPILOT_DEPLOY_ROLE`). *Note: The deploy job is an approval-gated simulation placeholder and does not execute real infrastructure changes.*
