@@ -1,0 +1,48 @@
+# AWS Baseline Reference Price Table for Cloud Copilot
+# NOTE: These prices are reference placeholders and must be verified against current official AWS pricing.
+
+last_updated: "2026-10-13"
+
+assumptions:
+  hours_per_month: 730
+  region: "us-east-1"
+  data_transfer_included_gb: 10
+  ebs_baseline_iops: 3000
+  note: "All estimates assume continuous 24/7 on-demand execution without savings plans or reserved instances."
+
+ec2_instances:
+  t3.nano: 0.0052
+  t3.micro: 0.0104
+  t3.small: 0.0208
+  t3.medium: 0.0416
+  t3.large: 0.0832
+  t3.xlarge: 0.1664
+  m5.large: 0.0960
+  m5.xlarge: 0.1920
+  c5.large: 0.0850
+  default: 0.0104
+
+rds_instances:
+  db.t3.micro: 0.0170
+  db.t3.small: 0.0340
+  db.t3.medium: 0.0680
+  db.m5.large: 0.1360
+  default: 0.0170
+
+ebs_storage_per_gb_month:
+  gp3: 0.080
+  gp2: 0.100
+  io1: 0.125
+  io2: 0.125
+  standard: 0.050
+  default: 0.080
+
+s3_storage_per_gb_month:
+  standard: 0.023
+  assumed_baseline_gb: 50
+
+nat_gateway_per_hour: 0.045
+nat_gateway_data_per_gb: 0.045
+
+cloudwatch_log_per_gb: 0.50
+cloudwatch_assumed_gb_month: 5
