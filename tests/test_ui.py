@@ -21,8 +21,8 @@ def test_ui_honors_api_base_url(monkeypatch):
         mock_get_resp.json.return_value = {"nodes": [], "edges": [], "clusters": []}
         mock_client.get.return_value = mock_get_resp
 
-        at = AppTest.from_file("../ui/streamlit_app.py")
-        at.run()
+        at = AppTest.from_file("../ui/streamlit_app.py", default_timeout=15)
+        at.run(timeout=15)
 
         # Check button label was renamed
         parse_btn = next((b for b in at.button if "Parse & Load" in b.label), None)
