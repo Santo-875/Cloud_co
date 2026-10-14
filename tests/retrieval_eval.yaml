@@ -1,0 +1,170 @@
+# retrieval_eval.yaml
+# 30 question-to-expected-source-type pairs for Gate R1 retrieval evaluation.
+# Used by scripts/eval_retrieval.py to compute hit@1 and hit@3 per doc_type.
+#
+# Fields:
+#   question        : the query string
+#   expected_type   : cli | terraform | pricing | security
+#   expected_keyword: a string that must appear in the top hit's content or metadata
+#                     (used as a loose match; not an exact assertion)
+#   notes           : optional human explanation
+
+questions:
+
+  # ── CLI (10 questions) ────────────────────────────────────────────────────
+
+  - question: "What is the AWS CLI command to launch a t3.micro instance?"
+    expected_type: cli
+    expected_keyword: "run-instances"
+    notes: "Basic ec2 launch"
+
+  - question: "How do I list EC2 instances with a specific tag using AWS CLI?"
+    expected_type: cli
+    expected_keyword: "describe-instances"
+    notes: "Tag filter query"
+
+  - question: "What AWS CLI command stops a running EC2 instance?"
+    expected_type: cli
+    expected_keyword: "stop-instances"
+    notes: "Stop vs terminate distinction"
+
+  - question: "How do I add a tag to an EC2 instance using the AWS CLI?"
+    expected_type: cli
+    expected_keyword: "create-tags"
+    notes: "Tagging"
+
+  - question: "What command terminates an EC2 instance and what are the risks?"
+    expected_type: cli
+    expected_keyword: "terminate"
+    notes: "Destructive command with warning"
+
+  - question: "How do I check S3 bucket versioning status with the AWS CLI?"
+    expected_type: cli
+    expected_keyword: "versioning"
+    notes: "S3API versioning"
+
+  - question: "What is the command to open port 443 on an EC2 security group?"
+    expected_type: cli
+    expected_keyword: "authorize"
+    notes: "Security group ingress"
+
+  - question: "How do I get my current AWS identity from the CLI?"
+    expected_type: cli
+    expected_keyword: "get-caller-identity"
+    notes: "STS identity check"
+
+  - question: "What CLI command shows me all RDS instances?"
+    expected_type: cli
+    expected_keyword: "describe-db-instances"
+    notes: "RDS listing"
+
+  - question: "How do I block public access on an S3 bucket using the AWS CLI?"
+    expected_type: cli
+    expected_keyword: "public-access-block"
+    notes: "S3 public access block"
+
+  # ── Terraform (10 questions) ───────────────────────────────────────────────
+
+  - question: "What arguments does the aws_s3_bucket Terraform resource take?"
+    expected_type: terraform
+    expected_keyword: "bucket"
+    notes: "S3 bucket argument reference"
+
+  - question: "How do I enable versioning on an S3 bucket in Terraform?"
+    expected_type: terraform
+    expected_keyword: "aws_s3_bucket_versioning"
+    notes: "Companion resource"
+
+  - question: "What companion resources should I use with aws_s3_bucket?"
+    expected_type: terraform
+    expected_keyword: "public_access_block"
+    notes: "S3 companion resources"
+
+  - question: "How do I create a VPC in Terraform?"
+    expected_type: terraform
+    expected_keyword: "aws_vpc"
+    notes: "VPC resource"
+
+  - question: "What is the Terraform resource for an EC2 security group?"
+    expected_type: terraform
+    expected_keyword: "aws_security_group"
+    notes: "Security group resource"
+
+  - question: "How do I import an existing S3 bucket into Terraform state?"
+    expected_type: terraform
+    expected_keyword: "import"
+    notes: "Terraform import"
+
+  - question: "What is the force_destroy argument in aws_s3_bucket?"
+    expected_type: terraform
+    expected_keyword: "force_destroy"
+    notes: "Destructive attribute"
+
+  - question: "How do I configure server-side encryption for S3 in Terraform?"
+    expected_type: terraform
+    expected_keyword: "encryption"
+    notes: "SSE companion resource"
+
+  - question: "What attributes does the aws_s3_bucket resource export?"
+    expected_type: terraform
+    expected_keyword: "arn"
+    notes: "Attribute reference section"
+
+  - question: "How do I create a CloudWatch metric alarm in Terraform?"
+    expected_type: terraform
+    expected_keyword: "cloudwatch"
+    notes: "CloudWatch alarm"
+
+  # ── Pricing (5 questions) ──────────────────────────────────────────────────
+
+  - question: "Does the AWS Pricing Calculator have an API?"
+    expected_type: pricing
+    expected_keyword: "no api"
+    notes: "Calculator has no API – key answer from Getting Started"
+
+  - question: "How does the AWS Pricing Calculator show 12-month cost?"
+    expected_type: pricing
+    expected_keyword: "12-month"
+    notes: "Calculator convention"
+
+  - question: "Is Free Tier included in Pricing Calculator estimates by default?"
+    expected_type: pricing
+    expected_keyword: "free tier"
+    notes: "Free Tier exclusion"
+
+  - question: "What is excluded from AWS Pricing Calculator estimates?"
+    expected_type: pricing
+    expected_keyword: "taxes"
+    notes: "Exclusions: taxes, support plan"
+
+  - question: "How do I get EC2 pricing data without using the Calculator?"
+    expected_type: pricing
+    expected_keyword: "price list"
+    notes: "AWS Price List API alternative"
+
+  # ── Security (5 questions) ─────────────────────────────────────────────────
+
+  - question: "Why is SSH port 22 open to 0.0.0.0/0 a security risk?"
+    expected_type: security
+    expected_keyword: "22"
+    notes: "Open SSH finding"
+
+  - question: "What does CKV_AWS_24 check for?"
+    expected_type: security
+    expected_keyword: "CKV_AWS_24"
+    notes: "Checkov check id routing"
+
+  - question: "Why should S3 buckets not be publicly accessible?"
+    expected_type: security
+    expected_keyword: "public"
+    notes: "S3 public access security"
+
+  - question: "What is the security risk of unencrypted EBS volumes?"
+    expected_type: security
+    expected_keyword: "encrypt"
+    notes: "EBS encryption finding"
+
+  - question: "What are the AWS Well-Architected security pillar best practices?"
+    expected_type: security
+    expected_keyword: "security"
+    notes: "Well-Architected security"

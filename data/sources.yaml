@@ -1,0 +1,341 @@
+# Cloud Copilot Reference Source Manifest
+# All sources are fetched offline; raw files are stored under data/raw/ (git-ignored).
+# Never commit raw fetched content. Only this manifest and THIRD_PARTY_NOTICES.md are committed.
+#
+# Field definitions:
+#   id              : unique snake_case identifier
+#   type            : cli_guide | cli_reference | terraform_provider | pricing_concept |
+#                     price_data | security_check
+#   url_or_repo     : canonical URL or "owner/repo" for GitHub sources
+#   pinned_version  : release tag, commit SHA, or YYYY-MM-DD fetch date
+#   license_note    : short description; raw data never redistributed
+#   parser          : which parser module handles this source
+#   refresh_command : command to re-fetch (run from repo root with venv active)
+
+sources:
+
+  # ── AWS CLI User Guide ──────────────────────────────────────────────────────
+
+  - id: aws_cli_ug_ec2_instances
+    type: cli_guide
+    url_or_repo: "https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-instances.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_guide
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ug_ec2_instances"
+
+  - id: aws_cli_ug_ec2_sg
+    type: cli_guide
+    url_or_repo: "https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-sg.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_guide
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ug_ec2_sg"
+
+  - id: aws_cli_ug_ec2_keypairs
+    type: cli_guide
+    url_or_repo: "https://docs.aws.amazon.com/cli/latest/userguide/cli-services-ec2-keypairs.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_guide
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ug_ec2_keypairs"
+
+  - id: aws_cli_ug_s3
+    type: cli_guide
+    url_or_repo: "https://docs.aws.amazon.com/cli/latest/userguide/cli-services-s3.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_guide
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ug_s3"
+
+  - id: aws_cli_ug_iam
+    type: cli_guide
+    url_or_repo: "https://docs.aws.amazon.com/cli/latest/userguide/cli-services-iam.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_guide
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ug_iam"
+
+  # ── AWS CLI v2 Command Reference ────────────────────────────────────────────
+
+  - id: aws_cli_ref_ec2
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_ec2"
+
+  - id: aws_cli_ref_s3api
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3api/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_s3api"
+
+  - id: aws_cli_ref_s3
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/s3/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_s3"
+
+  - id: aws_cli_ref_iam
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/iam/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_iam"
+
+  - id: aws_cli_ref_rds
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_rds"
+
+  - id: aws_cli_ref_cloudwatch
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/cloudwatch/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_cloudwatch"
+
+  - id: aws_cli_ref_sns
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sns/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_sns"
+
+  - id: aws_cli_ref_sts
+    type: cli_reference
+    url_or_repo: "https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/index.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: cli_reference
+    refresh_command: "python scripts/fetch_sources.py --id aws_cli_ref_sts"
+
+  # ── Terraform AWS Provider Docs (GitHub, pinned to release tag) ─────────────
+  # License: MPL-2.0. Fetched from raw.githubusercontent.com at pinned tag.
+  # Path pattern: website/docs/r/<resource>.html.markdown
+
+  - id: tf_aws_vpc
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_vpc"
+
+  - id: tf_aws_subnet
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_subnet"
+
+  - id: tf_aws_security_group
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_security_group"
+
+  - id: tf_aws_security_group_rule
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_security_group_rule"
+
+  - id: tf_aws_instance
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_instance"
+
+  - id: tf_aws_ebs_volume
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_ebs_volume"
+
+  - id: tf_aws_s3_bucket
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_s3_bucket"
+
+  - id: tf_aws_s3_bucket_versioning
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_s3_bucket_versioning"
+
+  - id: tf_aws_s3_bucket_public_access_block
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_s3_bucket_public_access_block"
+
+  - id: tf_aws_s3_bucket_server_side_encryption_configuration
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_s3_bucket_server_side_encryption_configuration"
+
+  - id: tf_aws_db_instance
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_db_instance"
+
+  - id: tf_aws_iam_role
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_iam_role"
+
+  - id: tf_aws_iam_policy
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_iam_policy"
+
+  - id: tf_aws_cloudwatch_metric_alarm
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_cloudwatch_metric_alarm"
+
+  - id: tf_aws_sns_topic
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_sns_topic"
+
+  - id: tf_aws_internet_gateway
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_internet_gateway"
+
+  - id: tf_aws_route_table
+    type: terraform_provider
+    url_or_repo: "hashicorp/terraform-provider-aws"
+    pinned_version: "v5.82.2"
+    license_note: "MPL-2.0"
+    parser: terraform_provider
+    refresh_command: "python scripts/fetch_sources.py --id tf_aws_route_table"
+
+  # ── AWS Pricing Calculator User Guide ───────────────────────────────────────
+  # NOTE: The Calculator has no API (confirmed in its own user guide).
+  # These pages document methodology and conventions only.
+  # Pricing numbers must come from price_data sources below.
+
+  - id: aws_calc_ug_getting_started
+    type: pricing_concept
+    url_or_repo: "https://docs.aws.amazon.com/pricing-calculator/latest/userguide/getting-started.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: pricing_concept
+    refresh_command: "python scripts/fetch_sources.py --id aws_calc_ug_getting_started"
+
+  - id: aws_calc_ug_estimate
+    type: pricing_concept
+    url_or_repo: "https://docs.aws.amazon.com/pricing-calculator/latest/userguide/create-estimate.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: pricing_concept
+    refresh_command: "python scripts/fetch_sources.py --id aws_calc_ug_estimate"
+
+  # ── AWS Price List Bulk Data ─────────────────────────────────────────────────
+  # No credentials needed. Pulled by scripts/refresh_prices.py.
+  # Output written to app/cost/price_snapshot.json (committed; contains only extracted rates).
+  # Verify current endpoint at: https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/price-changes.html
+
+  - id: aws_price_list_ec2_us_east_1
+    type: price_data
+    url_or_repo: "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonEC2/current/us-east-1/index.json"
+    pinned_version: "2024-01-15"
+    license_note: "AWS public pricing data – used for non-commercial estimation"
+    parser: price_data
+    refresh_command: "python scripts/refresh_prices.py"
+
+  - id: aws_price_list_rds_us_east_1
+    type: price_data
+    url_or_repo: "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonRDS/current/us-east-1/index.json"
+    pinned_version: "2024-01-15"
+    license_note: "AWS public pricing data – used for non-commercial estimation"
+    parser: price_data
+    refresh_command: "python scripts/refresh_prices.py"
+
+  - id: aws_price_list_s3_us_east_1
+    type: price_data
+    url_or_repo: "https://pricing.us-east-1.amazonaws.com/offers/v1.0/aws/AmazonS3/current/us-east-1/index.json"
+    pinned_version: "2024-01-15"
+    license_note: "AWS public pricing data – used for non-commercial estimation"
+    parser: price_data
+    refresh_command: "python scripts/refresh_prices.py"
+
+  # ── Checkov Policy Docs ──────────────────────────────────────────────────────
+
+  - id: checkov_docs_aws
+    type: security_check
+    url_or_repo: "bridgecrewio/checkov"
+    pinned_version: "3.2.0"
+    license_note: "Apache-2.0"
+    parser: security_check
+    refresh_command: "python scripts/fetch_sources.py --id checkov_docs_aws"
+
+  # ── AWS Well-Architected Pillars ─────────────────────────────────────────────
+
+  - id: aws_wa_security_pillar
+    type: security_check
+    url_or_repo: "https://docs.aws.amazon.com/wellarchitected/latest/security-pillar/welcome.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: security_check
+    refresh_command: "python scripts/fetch_sources.py --id aws_wa_security_pillar"
+
+  - id: aws_wa_cost_pillar
+    type: pricing_concept
+    url_or_repo: "https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/welcome.html"
+    pinned_version: "2024-01-15"
+    license_note: "AWS site content – reference only, not redistributed"
+    parser: pricing_concept
+    refresh_command: "python scripts/fetch_sources.py --id aws_wa_cost_pillar"

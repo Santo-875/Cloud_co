@@ -30,6 +30,10 @@ htmlcov/
 chroma_db/
 .chroma/
 
+# Fetched documentation corpus (untrusted data, never committed)
+data/raw/
+data/fetch_log.json
+
 # Operating system artifacts
 .DS_Store
 Thumbs.db
